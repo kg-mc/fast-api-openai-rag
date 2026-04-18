@@ -8,3 +8,13 @@ py -3.11 -m venv .venv
 ```Gitbash
 source .venv/Scripts/activate
 ```
+```Gitbash
+pip install -r requirements.txt
+```
+```Gitbash
+fastapi dev
+```
+O
+```Gitbash
+uvicorn main:app --reload
+```
