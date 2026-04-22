@@ -1,56 +1,35 @@
-from email.mime import message
-
 from config import META_ACCESS_TOKEN, META_PHONE_NUMBER_ID
 from typing import Optional
 from schemas.message_schema import SendMessageSchema, MessageReceivedSchema
-import requests
+import requests, asyncio
 from bot_agent.chatbot_agent import get_response_from_agent_w_history
 
 sessions = {}
-def reply_message(message_content: str) -> Optional[str]:
-    # primaria funcion para responder extrae el mensaje,
-    message = extract_message_content(message_content)
-    if message is not None:
-        # se verifica porque meta envia mensajes que son de confirmacion que son vacios
-        history = get_history(message.message_from)
-        response = get_response_from_agent_w_history(message=message.body, history=history)
-        #asyncio.create_task(message_service.user_message())
 
-        #print("Respuesta del agente: ", response["content"])
-        # se obtiene la respuesta, se genera el mensaje y se envia
-        new_message = SendMessageSchema(**{
-            "to": message.message_from,
-            "body": response["content"]
-        }
-        )
-        _response = send_message(new_message)
-        save_message(user_id=message.message_from, role="user", content=message.body)
-        save_message(user_id=message.message_from, role="assistant", content=response["content"])
-        # se añade historial
-        #print(get_history(message_content.message_from))
 
-def extract_message_content(body) -> MessageReceivedSchema|None:
-    #extrae el mensaje el numero y el nombre de perfil.
-    value = body.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {})
-
-    #solo para responder y extraer informacion cuando sea un mensaje verdadero, no para eventos de mensajes eliminados o editados
-    if "messages" not in value:
-        return None
-
+async def reply_message(message: MessageReceivedSchema) -> Optional[str]:
     try:
-        profile_name = value.get("contacts", [{}])[0].get("profile", {}).get("name")
-        from_number = value.get("messages", [{}])[0].get("from")
-        message_body = value.get("messages", [{}])[0].get("text", {}).get("body")
+        history = await asyncio.to_thread(get_history, message.message_from)
 
-        message_content = MessageReceivedSchema(**{
-            "profile_name": profile_name,
-            "message_from": from_number,
-            "body": message_body
-        })
-        return message_content
+        response = await asyncio.to_thread(
+            get_response_from_agent_w_history,
+            message.body,
+            history
+        )
+
+        new_message = SendMessageSchema(
+            to=message.message_from,
+            body=response["content"]
+        )
+
+        await asyncio.to_thread(send_message, new_message)
+
+        await asyncio.to_thread(save_message, message.message_from, "user", message.body)
+        await asyncio.to_thread(save_message, message.message_from, "assistant", response["content"])
+
     except Exception as e:
-        print(f"Error al extraer contenido del mensaje de Meta: {e}")
-        return None
+        print(f"Error en reply_message ...\n {e}")
+        return "ERROR en reply_message"
 
 def send_message(message: SendMessageSchema) -> Optional[str]:
     #funcion para enviar el mensaje
@@ -66,14 +45,16 @@ def send_message(message: SendMessageSchema) -> Optional[str]:
             "body": message.body
         }
     }
+    #print("MessageSchema: ",message)
     try:
         response = requests.post(f"https://graph.facebook.com/v25.0/{META_PHONE_NUMBER_ID}/messages", headers=headers, json=payload)
+        #print("Respuesta del mensaje: ",response)
         if response.status_code == 200:
             print(f"Respuesta para {message.to}: {message.body} \n")
             return response.json().get("message_id")
     except Exception as e:
         print(f"Error al enviar mensaje a través de Meta: {e}")
-        return None
+        return e
 
 
 def get_history(user_id):

@@ -1,7 +1,8 @@
 from openai import OpenAI
-import os
+import os, redis
 from pinecone import Pinecone
 from dotenv import load_dotenv
+
 load_dotenv()
 
 LLM_MODEL_NAME_OPENAI = os.getenv("LLM_MODEL_NAME_OPENAI", "gpt-3.5-turbo")
@@ -19,6 +20,13 @@ model_embedding = os.getenv("EMBEDDINGS_MODEL_NAME_OPENAI", "text-embedding-3-sm
 pc = Pinecone(api_key=PINECONE_API_KEY)
 index_pinecone = pc.Index(PINECONE_INDEX_NAME or "test")
 
+
+redis_client  = redis.Redis(
+    host="localhost",
+    port=6379,
+    db=0,
+    decode_responses=True
+)
 
 SYSTEM_PROMPT = """
 Eres un bot que responde preguntas y dudas de manera precisa y corta.

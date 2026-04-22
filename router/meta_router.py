@@ -2,6 +2,8 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import PlainTextResponse
 from services.message_service import reply_message
 from config import META_VERIFY_TOKEN
+from utils.whatsapp_parser import extract_message_content
+import asyncio
 
 router = APIRouter(tags=["Meta Webhook"])
 
@@ -9,8 +11,11 @@ router = APIRouter(tags=["Meta Webhook"])
 async def receive_message(request: Request):
     #webhook para recibir mensajes
     body = await request.json()
+    message = extract_message_content(body)
     try:
-        reply_message(body)
+        if message is not None:
+            asyncio.create_task(reply_message(message))
+            return {"status": "ok"}
     except Exception as e:
         print("Error:", e)
 

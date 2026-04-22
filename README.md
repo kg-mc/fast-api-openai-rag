@@ -18,3 +18,10 @@ O
 ```Gitbash
 uvicorn main:app --reload
 ```
+
+# PARA INSTALAR REDIS
+
+```
+sudo apt install redis -y
+```
+
