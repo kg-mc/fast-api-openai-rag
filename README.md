@@ -25,3 +25,6 @@ uvicorn main:app --reload
 sudo apt install redis -y
 ```
 
+
+
+python3.11 database.py

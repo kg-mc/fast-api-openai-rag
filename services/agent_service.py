@@ -64,3 +64,4 @@ def no_se() -> str:
 @tool("servicios_taxi", description="Usa esta herramienta para responder preguntas sobre servicios de taxi en Tacna, Perú.")
 def servicios_taxi() -> str:
     return "Para obtener información sobre servicios de taxi en Tacna. \n - Radio Taxi 300 Telf. 931300300/052-414488 \n -Radio Taxi Pavill Telf. 952000795/052-310909 \n -Taxitel Telf. 908884820 \n -Radio Taxi Torval Telf. 956588832"
+

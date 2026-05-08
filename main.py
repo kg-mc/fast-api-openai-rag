@@ -2,12 +2,20 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from bot_agent.chatbot_agent import get_test_agent, get_response_from_agent
 from router.meta_router import router as meta_router
+from database import engine
+from sqlalchemy import text
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("\n" + "="*40)
     print("🚀 CONFIGURACIONES DEL BOT DE WHATSAPP")
     print("="*40)
-
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+            print("[+] DB CONECTADA")
+    except Exception as e:
+        print("Error DB: ",e)
     print(f"[+] Modelo de IA generativa: OpenAI")
     print(f"[+] Modelo de embeddings: OpenAI Embeddings")
     print(f"[+] Base de datos: postgresql - Supabase")

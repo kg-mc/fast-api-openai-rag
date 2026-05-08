@@ -1,0 +1,27 @@
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+from config import DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
+
+DATABASE_URL = (
+    f"postgresql+asyncpg://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}"
+)
+
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_size=5,
+    max_overflow=10,
+    connect_args={"ssl": "require"}  # necesario para Supabase
+)
+
+AsyncSessionLocal = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+Base = declarative_base()
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
+

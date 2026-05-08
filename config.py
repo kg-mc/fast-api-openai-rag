@@ -3,6 +3,8 @@ import os, redis
 from pinecone import Pinecone
 from dotenv import load_dotenv
 
+
+
 load_dotenv()
 
 LLM_MODEL_NAME_OPENAI = os.getenv("LLM_MODEL_NAME_OPENAI", "gpt-3.5-turbo")
@@ -40,3 +42,9 @@ Solo puedes responder en base a la información (herramientas tools) que tienes,
 Si no encuentras información relevante para responder a la pregunta, di que no lo sabes de manera formal.
 Siempre trata de responder resumido y preciso y NUNCA RESPONDER PREGUNTAS QUE NO SE ENCUENTREN EN EL RETRIEVE CONTEXT o EN LAS TOOLS.
 """
+
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_DATABASE = os.getenv("DB_DATABASE")
+DB_USERNAME = os.getenv("DB_USERNAME")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
