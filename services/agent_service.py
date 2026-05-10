@@ -2,6 +2,8 @@ from datetime import datetime
 from langchain.tools import tool
 from services.embedding_service import embed_query
 from services.embedding_service import search_in_pinecone as search
+from typing import List
+from services.database_service import find_personas, get_info_completa_persona_by_id_sync
 
 
 @tool("hora_actual", description="Usa esta herramienta cuando el usuario pregunte la hora local (Perú), fecha actual o qué hora es en Perú.")
@@ -26,6 +28,49 @@ def retrieve_context(user_query: str) -> str:
         if text:
             texts.append(text)
     return "".join(texts)
+
+@tool(
+    "buscar_persona",
+    description="""
+    Usa esta herramienta cuando el usuario pregunta algo relacionado a una persona en específico.
+    Ejemplo:
+    ¿Quién es el Dr. Juan Pérez? -> Juan Pérez
+    De que hablo el Arquitecto Lujan -> Lujan
+    Quien es Juan Pablo -> Juan Pablo
+    SOLO ENVIA COMO PARAMETRO NOMBRES, APELLIDOS O NOMBRES COMPLETOS DE PERSONAS. NO ENVIES TITULOS NI NINGUN OTRO DATO. SI EL USUARIO ENVIA TITULOS O DATOS ADICIONALES, IGNORALOS Y SOLO EXTRAER LOS NOMBRES.
+    No extraigas títulos como Dr., Ing., Lic., etc.
+    """
+)
+def buscar_persona(nombres: str):
+
+    titles = {
+        "dr", "dr.",
+        "ing", "ing.",
+        "lic", "lic.",
+        "sr", "sr.",
+        "sra", "sra."
+    }
+
+    person_split = [
+        word.lower()
+        for word in nombres.split()
+        if word.lower() not in titles
+    ]
+    person_split = " ".join(person_split)
+    return find_personas(person_split)
+
+@tool("info_completa_persona", description="""
+Usa esta herramienta para obtener la información completa de una persona a partir de su ID.
+El parámetro de entrada es el ID de la persona, que se obtiene a través de la herramienta buscar_persona. Esta herramienta devuelve toda la información disponible de la persona, incluyendo su nombre completo, rol, información adicional y las ponencias asociadas a esa persona.
+Recuerda que el rol de la persona puede ser ponente, asistente, organizador, etc. La información adicional puede incluir detalles relevantes sobre la persona que puedan ser útiles para responder a las consultas del usuario.
+Ejemplo de uso:
+Usuario: ¿Quién es el Dr. Juan Pérez?
+Bot: El Dr. Juan Pérez es un reconocido arquitecto especializado en diseño urbano, con más de 20 años de experiencia en el campo. Ha participado en numerosos proyectos de gran escala y ha sido conferencista en varios eventos internacionales."""
+)
+def info_completa_persona(persona_id: int):
+    info_completa = get_info_completa_persona_by_id_sync(persona_id)
+    print("Información completa de la persona: ", info_completa)
+    return info_completa
 
 @tool("eje_tematico", description="Usa esta herramienta para obtener el eje temático del CADER XXIV.")
 def eje_tematico() -> str:

@@ -4,7 +4,7 @@ from bot_agent.chatbot_agent import get_test_agent, get_response_from_agent
 from router.meta_router import router as meta_router
 from database import engine
 from sqlalchemy import text
-
+from services.database_service import update_personas
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("\n" + "="*40)
@@ -14,6 +14,7 @@ async def lifespan(app: FastAPI):
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
             print("[+] DB CONECTADA")
+        await update_personas()
     except Exception as e:
         print("Error DB: ",e)
     print(f"[+] Modelo de IA generativa: OpenAI")
@@ -44,3 +45,13 @@ def test_agent():
 def test_agent_rag(message: str):
     response = get_response_from_agent(message)
     return {"agent_response": response}
+
+
+@app.post("/refresh-personas")
+async def refresh_personas():
+
+    await update_personas()
+
+    return {
+        "message": "Personas actualizadas",
+    }
