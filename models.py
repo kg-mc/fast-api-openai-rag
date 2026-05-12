@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, Text, Numeric, DateTime, func, ForeignKey
+from sqlalchemy import Column, BigInteger, Text, Numeric, DateTime, func, ForeignKey, SmallInteger
 from database import Base
 from sqlalchemy.orm import relationship
 
@@ -48,8 +48,9 @@ class PonenciaChunk(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     ponencia_id = Column(BigInteger, ForeignKey("public.ponencias.id", ondelete="CASCADE"))
-    content = Column(Text)
+    contenido = Column(Text)
     chunk_index = Column(BigInteger)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    orden = Column(SmallInteger, nullable=True) 
     
     ponencia = relationship("Ponencia", back_populates="chunks")

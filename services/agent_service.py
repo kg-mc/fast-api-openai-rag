@@ -1,9 +1,10 @@
 from datetime import datetime
 from langchain.tools import tool
+from schemas.persona_schema import PersonaCompletaSchema
 from services.embedding_service import embed_query
 from services.embedding_service import search_in_pinecone as search
 from typing import List
-from services.database_service import find_personas, get_info_completa_persona_by_id_sync
+from services.database_service import find_personas, get_chunks_by_ponencia_id_sync, get_info_completa_persona_by_id_sync, get_ponencias_by_persona_id_sync
 
 
 @tool("hora_actual", description="Usa esta herramienta cuando el usuario pregunte la hora local (Perú), fecha actual o qué hora es en Perú.")
@@ -67,9 +68,9 @@ Ejemplo de uso:
 Usuario: ¿Quién es el Dr. Juan Pérez?
 Bot: El Dr. Juan Pérez es un reconocido arquitecto especializado en diseño urbano, con más de 20 años de experiencia en el campo. Ha participado en numerosos proyectos de gran escala y ha sido conferencista en varios eventos internacionales."""
 )
-def info_completa_persona(persona_id: int):
+def info_completa_persona(persona_id: int) -> PersonaCompletaSchema | None:
     info_completa = get_info_completa_persona_by_id_sync(persona_id)
-    print("Información completa de la persona: ", info_completa)
+    #print("Información completa de la persona: ", info_completa)
     return info_completa
 
 @tool("eje_tematico", description="Usa esta herramienta para obtener el eje temático del CADER XXIV.")
@@ -110,3 +111,154 @@ def no_se() -> str:
 def servicios_taxi() -> str:
     return "Para obtener información sobre servicios de taxi en Tacna. \n - Radio Taxi 300 Telf. 931300300/052-414488 \n -Radio Taxi Pavill Telf. 952000795/052-310909 \n -Taxitel Telf. 908884820 \n -Radio Taxi Torval Telf. 956588832"
 
+@tool(
+    "get_contenido_ponencia_ponente",
+    description="""
+Usa esta herramienta cuando el usuario pregunte
+sobre lo que dijo, explicó o presentó un ponente en su ponencia.
+
+Ideal para:
+- transcripciones
+- contenido hablado
+- explicaciones de una ponencia
+- resúmenes de exposiciones
+- información semántica relacionada al speaker
+Eejemplo de pregunta del usuario:
+¿Qué dijo el Dr. Juan Pérez en su ponencia sobre diseño urbano?
+de que hablo el Ing Lujan?
+dame un resumen de lo que hablo la Dra. Martinez
+Recibe el ID de la persona y retorna contenido relacionado a sus ponencias.
+"""
+)
+def get_contenido_ponencia_ponente(persona_id: int) -> dict:
+
+    ponencias = get_ponencias_by_persona_id_sync(persona_id=persona_id)
+    all_chunks_ponencia = []
+    for ponencia in ponencias:
+
+        chunks = get_chunks_by_ponencia_id_sync(ponencia_id=ponencia.id)
+        all_chunks_ponencia.append({
+            "titulo_ponencia": ponencia.titulo,
+            "chunks": chunks
+        })
+    return all_chunks_ponencia
+
+@tool(
+    "retrieve_context_by_titulo_ponencia",
+    description="""
+Usa esta herramienta para obtener el contenido relacionado a una ponencia, a partir del título de la ponencia. Esta herramienta es ideal para obtener información semántica relacionada a una ponencia específica
+Ejemplo de pregunta del usuario:
+¿De qué habló la ponencia titulada "Innovación en el diseño urbano"?
+¿Qué dijo sobre el aborto el Dr. Julian? (En este caso tiene que utilizar otras herramientas (get_contenido_ponencia_ponente) para obtener titulo de la ponencia y luego usar este para obtener el contenido relacionado a la ponencia o extraer la informacion relevante)
+"""
+)
+def retrieve_context_by_titulo_ponencia(
+    titulo: str,
+    query: str
+) -> str:
+
+    query_vector = embed_query(
+        f"{titulo}. {query}"
+    )
+
+    results = search(
+        query_vector=query_vector,
+        top_k=10
+    ) or []
+
+    results = sorted(
+        results,
+        key=lambda x: x["score"],
+        reverse=True
+    )
+
+    filtered = []
+
+    for r in results:
+
+        if r["score"] <= 0.2:
+            continue
+
+        payload = r.get("payload", {})
+
+        ponencia_titulo = payload.get(
+            "ponencia_titulo",
+            ""
+        ).lower()
+
+        # Coincidencia flexible
+        if titulo.lower() in ponencia_titulo:
+            filtered.append(r)
+
+    textos = []
+
+    for point in filtered:
+
+        payload = point.get("payload", {})
+
+        text = (
+            payload.get("text")
+            or payload.get("content")
+        )
+
+        if text:
+            textos.append(text)
+
+    return "\n".join(textos)
+
+
+@tool(
+    "retrieve_persona_from_context",
+    description="""
+Usa esta herramienta cuando el usuario pregunte
+quién habló sobre un tema específico.
+
+Realiza una búsqueda semántica y devuelve
+la información del ponente relacionado
+con el contenido encontrado.
+
+Ejemplos:
+- ¿Quién habló sobre urbanismo sostenible?
+- ¿Qué ponente mencionó problemas emocionales?
+- ¿Quién explicó temas de ciberseguridad?
+"""
+)
+def retrieve_persona_from_context(
+    user_query: str
+) -> dict:
+
+    query_vector = embed_query(user_query)
+
+    results = search(
+        query_vector=query_vector,
+        top_k=5
+    ) or []
+
+    results = sorted(
+        results,
+        key=lambda x: x["score"],
+        reverse=True
+    )
+
+    filtered = [
+        r for r in results
+        if r["score"] > 0.2
+    ]
+
+    if not filtered:
+        return {
+            "found": False,
+            "message": "No se encontró un ponente relacionado."
+        }
+
+    best = filtered[0]
+    payload = best.get("payload", {})
+    return {
+        "found": True,
+        "ponente_name": payload.get("ponente_name"),
+        "ponencia_titulo": payload.get("ponencia_titulo"),
+        "contenido_relacionado": (
+            payload.get("content")
+            or payload.get("text")
+        )
+    }

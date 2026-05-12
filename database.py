@@ -12,7 +12,7 @@ engine = create_async_engine(
     echo=False,
     pool_size=5,
     max_overflow=10,
-    connect_args={"ssl": False}
+    connect_args={"ssl": "require"}
 )
 
 AsyncSessionLocal = sessionmaker(
@@ -36,7 +36,8 @@ sync_engine = create_engine(
     SYNC_DATABASE_URL,
     pool_size=5,
     max_overflow=10,
-    pool_pre_ping=True
+    pool_pre_ping=True,
+    connect_args={"sslmode": "require"}
 )
 
 SessionLocal = sessionmaker(

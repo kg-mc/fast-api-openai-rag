@@ -1,9 +1,9 @@
 from rapidfuzz import process, fuzz
 from database import AsyncSessionLocal, SessionLocal
-from schemas.persona_schema import PersonaSchema
+from schemas.persona_schema import PersonaCompletaSchema, PersonaSchema
 from sqlalchemy import text
 from sqlalchemy import select
-from models import Persona
+from models import Persona, Ponencia, PonenciaChunk
 
 personas_global: list[PersonaSchema] = []
 nombres_global: list[str] = []
@@ -46,7 +46,7 @@ def find_personas(persona: str):
         "nombre_completo": persona_encontrada.nombre_completo,
     }
 
-def get_info_completa_persona_by_id_sync(persona_id: int):
+def get_info_completa_persona_by_id_sync(persona_id: int) -> PersonaCompletaSchema | None:
     with SessionLocal() as session:
         persona = (
             session.query(Persona)
@@ -57,8 +57,34 @@ def get_info_completa_persona_by_id_sync(persona_id: int):
         if not persona:
             return None
 
-        return {
-            "nombres_completo": persona.nombres,
-            "rol_en_evento": persona.rol,
-            "info": persona.info,
-        }
+        return PersonaCompletaSchema(
+            nombres_completo=persona.nombres,
+            rol_en_evento=persona.rol,
+            info=persona.info
+        )
+
+def get_ponencias_by_persona_id_sync(persona_id: int):
+    with SessionLocal() as session:
+        ponencias = (
+            session.query(Ponencia)
+            .filter(Ponencia.persona_id == persona_id)
+            .all()
+        )
+        return ponencias
+    
+def get_chunks_by_ponencia_id_sync(ponencia_id: int):
+    with SessionLocal() as session:
+        chunks = (
+            session.query(PonenciaChunk)
+            .filter(PonenciaChunk.ponencia_id == ponencia_id)
+            .order_by(PonenciaChunk.orden.asc())
+            .all()
+        )
+        return [
+            {
+                "orden": chunk.orden,
+                "contenido": chunk.contenido,
+                
+            }
+            for chunk in chunks
+        ]
