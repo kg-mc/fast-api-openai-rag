@@ -71,16 +71,21 @@ async def upsert_ponencia(data: UpsertRequest):
             }
             for v in data.vectors
         ]
-        upload_pinecone(vectors)  # Subir a Pinecone
+        if not vectors:
+            raise HTTPException(
+                status_code=400,
+                detail="No vectors received"
+            )
+        result = upload_pinecone(vectors)
         return {
             "ok": True,
-            "total": len(vectors)
+            "received": len(vectors),
+            "pinecone_result": result
         }
     except Exception as e:
-
-        print("ERROR PINECONE:", e)
+        print("ERROR PINECONE:", str(e))
 
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=f"Pinecone error: {str(e)}"
         )
