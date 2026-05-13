@@ -1,4 +1,5 @@
 from config import client_openai as client, model_embedding as model_name, index_pinecone as index
+from schemas.pinecone_schema import Vector
 
 
 
@@ -40,3 +41,11 @@ def embed_query( query: str) -> list[float]:
         embedding_vector = response.data[0].embedding
 
         return embedding_vector
+
+def upload_pinecone(vectors):
+    try:
+        index.upsert(vectors=vectors)
+        print("Vectores subidos a Pinecone exitosamente.")
+    except Exception as e:
+        print("Error al subir vectores a Pinecone:", e)
+        raise e

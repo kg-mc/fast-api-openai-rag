@@ -1,8 +1,12 @@
+from http.client import HTTPException
+
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from bot_agent.chatbot_agent import get_test_agent, get_response_from_agent
 from router.meta_router import router as meta_router
 from database import engine
+from schemas.pinecone_schema import UpsertRequest
+from services.embedding_service import upload_pinecone
 from sqlalchemy import text
 from services.database_service import update_personas
 @asynccontextmanager
@@ -55,3 +59,28 @@ async def refresh_personas():
     return {
         "message": "Personas actualizadas",
     }
+    
+@app.post("/upsert-ponencia")
+async def upsert_ponencia(data: UpsertRequest):
+    try:
+        vectors = [
+            {
+                "id": v.id,
+                "values": v.values,
+                "metadata": v.metadata
+            }
+            for v in data.vectors
+        ]
+        upload_pinecone(vectors)  # Subir a Pinecone
+        return {
+            "ok": True,
+            "total": len(vectors)
+        }
+    except Exception as e:
+
+        print("ERROR PINECONE:", e)
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
