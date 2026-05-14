@@ -39,7 +39,7 @@ def find_personas(persona: str):
     if not resultados:
         return None
     nombre, score, index = resultados[0]
-    if score < 30:
+    if score < 55:
         return None
     persona_encontrada = personas_global[index]
     print(f"Persona encontrada: {persona_encontrada.nombre_completo} (Score: {score})")

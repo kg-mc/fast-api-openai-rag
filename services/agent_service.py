@@ -12,21 +12,37 @@ def hora_actual() -> str:
     """Usa esta herramienta cuando el usuario pregunte la hora actual, fecha actual o qué hora es en Perú."""
     return datetime.now().strftime("%d/%m/%Y %H:%M")   
 
-@tool("retrieve_context", description="""
-    Utiliza esta herramienta SOLO como último recurso cuando ninguna otra herramienta haya encontrado información suficiente para responder al usuario.
-    O tambien puedes utilizar para complementar informacion en caso otras herramientas hayan encontrado información pero no sea suficiente para responder a la consulta del usuario.
+@tool("buscar_informacion", description="""
+Principal fuente de información del asistente.
 
-    Esta herramienta realiza una búsqueda semántica general sobre el conocimiento almacenado.
+    Esta herramienta realiza búsquedas semánticas sobre toda la base de conocimiento disponible.
 
-    Úsala especialmente cuando:
-    - La consulta sea abierta o ambigua.
-    - El usuario pregunte sobre contenido textual específico.
-    - No exista una herramienta más especializada que pueda resolver la consulta.
+    Utilízala frecuentemente para:
+    - responder preguntas;
+    - obtener contexto;
+    - complementar información;
+    - validar respuestas;
+    - buscar información sobre ponencias, personas y temas;
+    - interpretar consultas ambiguas.
 
-    NO usar si otra herramienta ya puede responder correctamente.
+    Debe utilizarse especialmente cuando:
+    - el usuario haga preguntas abiertas;
+    - existan nombres incompletos o abreviados;
+    - se necesite más contexto;
+    - otras herramientas no sean suficientes.
+
+    Ejemplos:
+    - "¿Qué dijo Jesús Salas?"
+    - "¿Quién es el super?"
+    - "Háblame de IA"
+    - "¿Qué temas se tocaron?"
+
+    IMPORTANTE:
+    - Usa esta herramienta antes de responder preguntas informativas.
+    - No inventes respuestas si no se encuentra información relevante.
       """)
-def retrieve_context(user_query: str) -> str:
-    print("Consulta del usuario para retrieve_context: ", user_query)
+def buscar_informacion(user_query: str) -> str:
+    #print("Consulta del usuario para retrieve_context: ", user_query)
     query_vector = embed_query(user_query)
 
     results = search(query_vector, top_k=5) or []
@@ -52,6 +68,7 @@ def retrieve_context(user_query: str) -> str:
     Quien es Juan Pablo -> Juan Pablo
     SOLO ENVIA COMO PARAMETRO NOMBRES, APELLIDOS O NOMBRES COMPLETOS DE PERSONAS. NO ENVIES TITULOS NI NINGUN OTRO DATO. SI EL USUARIO ENVIA TITULOS O DATOS ADICIONALES, IGNORALOS Y SOLO EXTRAER LOS NOMBRES.
     No extraigas títulos como Dr., Ing., Lic., etc.
+    SINO LOGRAS ENCONTRARLA BUSCALA EN OTRA HERRAMIENTA
     """
 )
 def buscar_persona(nombres: str):

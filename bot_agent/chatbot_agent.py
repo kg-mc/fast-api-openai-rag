@@ -1,5 +1,5 @@
 from langchain.agents import create_agent
-from services.agent_service import hora_actual, retrieve_context, saludo, about_cader, about_me, eje_tematico, lugar_cader, fecha_cader, no_se, servicios_taxi, buscar_persona, info_completa_persona, get_contenido_ponencia_ponente,retrieve_context_by_titulo_ponencia, retrieve_persona_from_context
+from services.agent_service import hora_actual, buscar_informacion, saludo, about_cader, about_me, eje_tematico, lugar_cader, fecha_cader, no_se, servicios_taxi, buscar_persona, info_completa_persona, get_contenido_ponencia_ponente,retrieve_context_by_titulo_ponencia, retrieve_persona_from_context
 from config import SYSTEM_PROMPT
 from services.llm_service import openai_llm, get_message
 
@@ -7,7 +7,7 @@ from services.llm_service import openai_llm, get_message
 
 agent = create_agent(
     model=openai_llm,
-    tools=[hora_actual, retrieve_context, eje_tematico, saludo, lugar_cader, fecha_cader, about_me, about_cader, no_se, servicios_taxi, buscar_persona, info_completa_persona, get_contenido_ponencia_ponente, retrieve_context_by_titulo_ponencia, retrieve_persona_from_context],
+    tools=[hora_actual, buscar_informacion, eje_tematico, saludo, lugar_cader, fecha_cader, about_me, about_cader, no_se, servicios_taxi, buscar_persona, info_completa_persona, get_contenido_ponencia_ponente, retrieve_context_by_titulo_ponencia, retrieve_persona_from_context],
     system_prompt=SYSTEM_PROMPT
 )
 
