@@ -8,3 +8,4 @@ class PersonaCompletaSchema(BaseModel):
     nombres_completo: str
     rol_en_evento: str
     info: Optional[str] = None
+    cargo: Optional[str] = None

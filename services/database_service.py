@@ -60,7 +60,8 @@ def get_info_completa_persona_by_id_sync(persona_id: int) -> PersonaCompletaSche
         return PersonaCompletaSchema(
             nombres_completo=persona.nombres,
             rol_en_evento=persona.rol,
-            info=persona.info
+            info=persona.info,
+            cargo=persona.cargo
         )
 
 def get_ponencias_by_persona_id_sync(persona_id: int):
