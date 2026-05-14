@@ -31,7 +31,7 @@ def retrieve_context(user_query: str) -> str:
 
     results = search(query_vector, top_k=5) or []
     results = sorted(results, key=lambda x: x["score"], reverse=True)
-    filtered = [r for r in results if r["score"] > 0.5]
+    filtered = [r for r in results if r["score"] > 0.4]
     top_results = filtered
     #print("Resultados vector-db ", top_results)
     texts = []

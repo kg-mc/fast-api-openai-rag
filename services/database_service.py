@@ -8,6 +8,7 @@ from models import Persona, Ponencia, PonenciaChunk
 personas_global: list[PersonaSchema] = []
 nombres_global: list[str] = []
 async def update_personas():
+    print("Actualizando personas desde la base de datos...")
     global personas_global
     global nombres_global
     async with AsyncSessionLocal() as session:
@@ -23,6 +24,7 @@ async def update_personas():
             for p in personas
         ]
         nombres_global = [p.nombre_completo for p in personas_global]
+    print("Personas actualizadas.", len(personas_global), "personas cargadas.")
 
 
 def find_personas(persona: str):
