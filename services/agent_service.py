@@ -29,9 +29,9 @@ def retrieve_context(user_query: str) -> str:
     print("Consulta del usuario para retrieve_context: ", user_query)
     query_vector = embed_query(user_query)
 
-    results = search(query_vector, top_k=2) or []
+    results = search(query_vector, top_k=5) or []
     results = sorted(results, key=lambda x: x["score"], reverse=True)
-    filtered = [r for r in results if r["score"] > 0.2]
+    filtered = [r for r in results if r["score"] > 0.5]
     top_results = filtered
     #print("Resultados vector-db ", top_results)
     texts = []
