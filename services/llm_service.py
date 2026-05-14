@@ -1,6 +1,6 @@
 from langchain_openai import ChatOpenAI
 from config import LLM_MODEL_NAME_OPENAI
-from services.agent_service import hora_actual, buscar_informacion, saludo, about_cader, about_me, eje_tematico, lugar_cader, fecha_cader, no_se, servicios_taxi, buscar_persona, info_completa_persona, get_contenido_ponencia_ponente,retrieve_context_by_titulo_ponencia, retrieve_persona_from_context
+from services.agent_service import hora_actual, buscar_informacion, saludo, about_cader, about_me, eje_tematico, lugar_cader, fecha_cader, no_se, servicios_taxi, buscar_persona, info_completa_persona, get_contenido_conferencia_conferencista,retrieve_context_by_titulo_conferencia, retrieve_persona_from_context, get_programa
 
 TOOLS = [
     hora_actual,
@@ -15,9 +15,10 @@ TOOLS = [
     servicios_taxi,
     buscar_persona,
     info_completa_persona,
-    retrieve_context_by_titulo_ponencia,
+    retrieve_context_by_titulo_conferencia,
     retrieve_persona_from_context,
-    get_contenido_ponencia_ponente
+    get_contenido_conferencia_conferencista,
+    get_programa
 ]
 openai_llm = ChatOpenAI(model=LLM_MODEL_NAME_OPENAI, temperature=0.2, max_completion_tokens=500).bind_tools(TOOLS, tool_choice="auto")
 

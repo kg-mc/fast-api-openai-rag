@@ -60,8 +60,8 @@ async def refresh_personas():
         "message": "Personas actualizadas",
     }
     
-@app.post("/upsert-ponencia")
-async def upsert_ponencia(data: UpsertRequest):
+@app.post("/upsert-info")
+async def upsert_info(data: UpsertRequest):
     try:
         vectors = [
             {

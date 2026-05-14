@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, Text, Numeric, DateTime, func, ForeignKey, SmallInteger
+from sqlalchemy import Column, BigInteger, Text, Numeric, DateTime, func, ForeignKey, SmallInteger, Date, Time
 from database import Base
 from sqlalchemy.orm import relationship
 
@@ -24,11 +24,11 @@ class Persona(Base):
     info = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    ponencias = relationship("Ponencia", back_populates="persona")
+    conferencias = relationship("Conferencia", back_populates="persona")
 
 
-class Ponencia(Base):
-    __tablename__ = "ponencias"
+class Conferencia(Base):
+    __tablename__ = "conferencias"
     __table_args__ = {"schema": "public"}
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
@@ -37,21 +37,37 @@ class Ponencia(Base):
     resumen = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    persona = relationship("Persona", back_populates="ponencias")
+    persona = relationship("Persona", back_populates="conferencias")
     chunks = relationship(
-        "PonenciaChunk",
-        back_populates="ponencia",
+        "ConferenciaChunk",
+        back_populates="conferencia",
         cascade="all, delete"
     )
-class PonenciaChunk(Base):
-    __tablename__ = "ponencia_chunks"
+class ConferenciaChunk(Base):
+    __tablename__ = "conferencia_chunks"
     __table_args__ = {"schema": "public"}
 
     id = Column(BigInteger, primary_key=True, index=True)
-    ponencia_id = Column(BigInteger, ForeignKey("public.ponencias.id", ondelete="CASCADE"))
+    conferencia_id = Column(BigInteger, ForeignKey("public.conferencias.id", ondelete="CASCADE"))
     contenido = Column(Text)
     chunk_index = Column(BigInteger)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     orden = Column(SmallInteger, nullable=True) 
     
-    ponencia = relationship("Ponencia", back_populates="chunks")
+    conferencia = relationship("Conferencia", back_populates="chunks")
+
+class Programa(Base):
+
+    __tablename__ = "programa"
+    __table_args__ = {"schema":"public"}
+
+    id = Column(BigInteger, primary_key=True, index = True)
+
+    fecha = Column(Date, nullable=False)
+    hora_inicio = Column(Time, nullable=False)
+    orden = Column(SmallInteger, nullable=False)
+    tipo = Column(Text, nullable=False)
+    titulo = Column(Text, nullable=False)
+    participante = Column(Text, nullable=True)
+    descripcion = Column(Text, nullable = False)
+

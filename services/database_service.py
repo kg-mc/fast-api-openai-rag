@@ -3,7 +3,7 @@ from database import AsyncSessionLocal, SessionLocal
 from schemas.persona_schema import PersonaCompletaSchema, PersonaSchema
 from sqlalchemy import text
 from sqlalchemy import select
-from models import Persona, Ponencia, PonenciaChunk
+from models import Persona, Conferencia, ConferenciaChunk, Programa
 
 personas_global: list[PersonaSchema] = []
 nombres_global: list[str] = []
@@ -66,21 +66,21 @@ def get_info_completa_persona_by_id_sync(persona_id: int) -> PersonaCompletaSche
             cargo=persona.cargo
         )
 
-def get_ponencias_by_persona_id_sync(persona_id: int):
+def get_conferencias_by_persona_id_sync(persona_id: int):
     with SessionLocal() as session:
-        ponencias = (
-            session.query(Ponencia)
-            .filter(Ponencia.persona_id == persona_id)
+        conferencias = (
+            session.query(Conferencia)
+            .filter(Conferencia.persona_id == persona_id)
             .all()
         )
-        return ponencias
+        return conferencias
     
-def get_chunks_by_ponencia_id_sync(ponencia_id: int):
+def get_chunks_by_conferencia_id_sync(conferencia_id: int):
     with SessionLocal() as session:
         chunks = (
-            session.query(PonenciaChunk)
-            .filter(PonenciaChunk.ponencia_id == ponencia_id)
-            .order_by(PonenciaChunk.orden.asc())
+            session.query(ConferenciaChunk)
+            .filter(ConferenciaChunk.conferencia_id == conferencia_id)
+            .order_by(ConferenciaChunk.orden.asc())
             .all()
         )
         return [
@@ -91,3 +91,64 @@ def get_chunks_by_ponencia_id_sync(ponencia_id: int):
             }
             for chunk in chunks
         ]
+
+
+def get_programa_sync():
+
+    with SessionLocal() as session:
+
+        eventos = (
+            session.query(Programa)
+            .order_by(
+                Programa.fecha.asc(),
+                Programa.hora_inicio.asc(),
+                Programa.orden.asc()
+            )
+            .all()
+        )
+
+        return [
+            {
+                "id": evento.id,
+                "fecha": str(evento.fecha),
+                "hora_inicio": str(evento.hora_inicio),
+                "orden": evento.orden,
+                "tipo": evento.tipo,
+                "titulo": evento.titulo,
+                "participante": evento.participante,
+                "descripcion": evento.descripcion
+            }
+            for evento in eventos
+        ]
+    
+
+def find_in_array(query: str, array: list[str], threshold: int = 55):
+    if not array:
+        return None
+
+    result = process.extract(
+        query,
+        array,
+        scorer=fuzz.token_set_ratio,
+        limit=1
+    )
+    if not result:
+        return None
+    best_match, score, index = result[0]
+    if score < threshold:
+        return None
+    return best_match
+
+def filtros_lista(array, filtros):
+    resultado = array
+
+    for key, value in filtros.items():
+        if value is None:
+            continue
+
+        resultado = [
+            item for item in resultado
+            if key in item and item[key] == value
+        ]
+
+    return resultado

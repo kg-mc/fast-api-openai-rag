@@ -4,13 +4,23 @@ from schemas.persona_schema import PersonaCompletaSchema
 from services.embedding_service import embed_query
 from services.embedding_service import search_in_pinecone as search
 from typing import List
-from services.database_service import find_personas, get_chunks_by_ponencia_id_sync, get_info_completa_persona_by_id_sync, get_ponencias_by_persona_id_sync
+from services.database_service import find_personas, get_chunks_by_conferencia_id_sync, get_info_completa_persona_by_id_sync, get_conferencias_by_persona_id_sync, get_programa_sync, find_in_array, filtros_lista
 
 
-@tool("hora_actual", description="Usa esta herramienta cuando el usuario pregunte la hora local (Perú), fecha actual o qué hora es en Perú.")
-def hora_actual() -> str:
-    """Usa esta herramienta cuando el usuario pregunte la hora actual, fecha actual o qué hora es en Perú."""
-    return datetime.now().strftime("%d/%m/%Y %H:%M")   
+@tool(
+    "hora_actual",
+    description="Retorna la fecha y hora actual de Perú."
+)
+def hora_actual() -> dict:
+
+    ahora = datetime.now()
+
+    return {
+        "fecha": ahora.strftime("%Y-%m-%d"),
+        "hora": ahora.strftime("%H:%M:%S"),
+        "datetime": ahora.isoformat(),
+        "timestamp": ahora.timestamp()
+    }
 
 @tool("buscar_informacion", description="""
 Principal fuente de información del asistente.
@@ -22,7 +32,7 @@ Principal fuente de información del asistente.
     - obtener contexto;
     - complementar información;
     - validar respuestas;
-    - buscar información sobre ponencias, personas y temas;
+    - buscar información sobre conferencias, personas y temas;
     - interpretar consultas ambiguas.
 
     Debe utilizarse especialmente cuando:
@@ -91,8 +101,8 @@ def buscar_persona(nombres: str):
 
 @tool("info_completa_persona", description="""
 Usa esta herramienta para obtener la información completa de una persona a partir de su ID.
-El parámetro de entrada es el ID de la persona, que se obtiene a través de la herramienta buscar_persona. Esta herramienta devuelve toda la información disponible de la persona, incluyendo su nombre completo, rol, información adicional y las ponencias asociadas a esa persona.
-Recuerda que el rol de la persona puede ser ponente, asistente, organizador, etc. La información adicional puede incluir detalles relevantes sobre la persona que puedan ser útiles para responder a las consultas del usuario.
+El parámetro de entrada es el ID de la persona, que se obtiene a través de la herramienta buscar_persona. Esta herramienta devuelve toda la información disponible de la persona, incluyendo su nombre completo, rol, información adicional y las conferencias asociadas a esa persona.
+Recuerda que el rol de la persona puede ser conferencista, asistente, organizador, etc. La información adicional puede incluir detalles relevantes sobre la persona que puedan ser útiles para responder a las consultas del usuario.
 Ejemplo de uso:
 Usuario: ¿Quién es el Dr. Juan Pérez?
 Bot: El Dr. Juan Pérez es un reconocido arquitecto especializado en diseño urbano, con más de 20 años de experiencia en el campo. Ha participado en numerosos proyectos de gran escala y ha sido conferencista en varios eventos internacionales."""
@@ -154,47 +164,47 @@ def servicios_taxi() -> str:
     return "Para obtener información sobre servicios de taxi en Tacna. \n - Radio Taxi 300 Telf. 931300300/052-414488 \n -Radio Taxi Pavill Telf. 952000795/052-310909 \n -Taxitel Telf. 908884820 \n -Radio Taxi Torval Telf. 956588832"
 
 @tool(
-    "get_contenido_ponencia_ponente",
+    "get_contenido_conferencia_conferencista",
     description="""
 Usa esta herramienta cuando el usuario pregunte
-sobre lo que dijo, explicó o presentó un ponente en su ponencia.
+sobre lo que dijo, explicó o presentó un conferencista en su conferencia.
 
 Ideal para:
 - transcripciones
 - contenido hablado
-- explicaciones de una ponencia
+- explicaciones de una conferencia
 - resúmenes de exposiciones
 - información semántica relacionada al speaker
 Eejemplo de pregunta del usuario:
-¿Qué dijo el Dr. Juan Pérez en su ponencia sobre diseño urbano?
+¿Qué dijo el Dr. Juan Pérez en su conferencia sobre diseño urbano?
 de que hablo el Ing Lujan?
 dame un resumen de lo que hablo la Dra. Martinez
-Recibe el ID de la persona y retorna contenido relacionado a sus ponencias.
+Recibe el ID de la persona y retorna contenido relacionado a sus conferencias.
 """
 )
-def get_contenido_ponencia_ponente(persona_id: int) -> dict:
+def get_contenido_conferencia_conferencista(persona_id: int) -> dict:
 
-    ponencias = get_ponencias_by_persona_id_sync(persona_id=persona_id)
-    all_chunks_ponencia = []
-    for ponencia in ponencias:
+    conferencias = get_conferencias_by_persona_id_sync(persona_id=persona_id)
+    all_chunks_conferencia = []
+    for conferencia in conferencias:
 
-        chunks = get_chunks_by_ponencia_id_sync(ponencia_id=ponencia.id)
-        all_chunks_ponencia.append({
-            "titulo_ponencia": ponencia.titulo,
+        chunks = get_chunks_by_conferencia_id_sync(conferencia_id=conferencia.id)
+        all_chunks_conferencia.append({
+            "titulo_conferencia": conferencia.titulo,
             "chunks": chunks
         })
-    return all_chunks_ponencia
+    return all_chunks_conferencia
 
 @tool(
-    "retrieve_context_by_titulo_ponencia",
+    "retrieve_context_by_titulo_conferencia",
     description="""
-Usa esta herramienta para obtener el contenido relacionado a una ponencia, a partir del título de la ponencia. Esta herramienta es ideal para obtener información semántica relacionada a una ponencia específica
+Usa esta herramienta para obtener el contenido relacionado a una conferencia, a partir del título de la conferencia. Esta herramienta es ideal para obtener información semántica relacionada a una conferencia específica
 Ejemplo de pregunta del usuario:
-¿De qué habló la ponencia titulada "Innovación en el diseño urbano"?
-¿Qué dijo sobre el aborto el Dr. Julian? (En este caso tiene que utilizar otras herramientas (get_contenido_ponencia_ponente) para obtener titulo de la ponencia y luego usar este para obtener el contenido relacionado a la ponencia o extraer la informacion relevante)
+¿De qué habló la conferencia titulada "Innovación en el diseño urbano"?
+¿Qué dijo sobre el aborto el Dr. Julian? (En este caso tiene que utilizar otras herramientas (get_contenido_conferencia_conferencista) para obtener titulo de la conferencia y luego usar este para obtener el contenido relacionado a la conferencia o extraer la informacion relevante)
 """
 )
-def retrieve_context_by_titulo_ponencia(
+def retrieve_context_by_titulo_conferencia(
     titulo: str,
     query: str
 ) -> str:
@@ -223,13 +233,13 @@ def retrieve_context_by_titulo_ponencia(
 
         payload = r.get("payload", {})
 
-        ponencia_titulo = payload.get(
-            "ponencia_titulo",
+        conferencia_titulo = payload.get(
+            "conferencia_titulo",
             ""
         ).lower()
 
         # Coincidencia flexible
-        if titulo.lower() in ponencia_titulo:
+        if titulo.lower() in conferencia_titulo:
             filtered.append(r)
 
     textos = []
@@ -256,12 +266,12 @@ Usa esta herramienta cuando el usuario pregunte
 quién habló sobre un tema específico.
 
 Realiza una búsqueda semántica y devuelve
-la información del ponente relacionado
+la información del conferencista relacionado
 con el contenido encontrado.
 
 Ejemplos:
 - ¿Quién habló sobre urbanismo sostenible?
-- ¿Qué ponente mencionó problemas emocionales?
+- ¿Qué conferencista mencionó problemas emocionales?
 - ¿Quién explicó temas de ciberseguridad?
 """
 )
@@ -290,17 +300,85 @@ def retrieve_persona_from_context(
     if not filtered:
         return {
             "found": False,
-            "message": "No se encontró un ponente relacionado."
+            "message": "No se encontró un conferencista relacionado."
         }
 
     best = filtered[0]
     payload = best.get("payload", {})
     return {
         "found": True,
-        "ponente_name": payload.get("ponente_name"),
-        "ponencia_titulo": payload.get("ponencia_titulo"),
+        "conferencista_name": payload.get("conferencista_name"),
+        "conferencia_titulo": payload.get("conferencia_titulo"),
         "contenido_relacionado": (
             payload.get("content")
             or payload.get("text")
         )
     }
+
+@tool(
+    "get_programa",
+    description="""
+    Obtiene eventos del programa o cronograma.
+
+    Parámetros:
+    - dia (estdos parametros tu lo supones segun lo que ingrese el usuario):
+        0 = todos los días
+        1 = primer día
+        2 = segundo día
+        etc.
+
+    - tipo (opcional, sino indica entonces se refiere a todo por lo tanto es None):
+        conferencia, panel, pausa, etc.
+
+    - estado (supone segun la pregunta):
+        todos
+        pendiente
+        en_curso
+        finalizado
+    """
+)
+def get_programa(
+    dia: int = 0,
+    tipo: str | None = None,
+    estado: str = "todos",
+) -> list:
+    programa_completo = get_programa_sync()
+
+    filtros = {}
+
+    if dia != 0:
+        fechas_unicas = sorted({
+            evento["fecha"]
+            for evento in programa_completo
+        })
+
+        fechas = {
+            i + 1: fecha_item
+            for i, fecha_item in enumerate(fechas_unicas)
+        }
+
+        fecha_objetivo = fechas.get(dia)
+
+        if fecha_objetivo is not None:
+
+            filtros["fecha"] = fecha_objetivo
+        else:
+            return {
+                "error": True,
+                "message": (
+                    f"El día {dia} no existe en el programa. "
+                    f"El evento solo cuenta con {len(fechas_unicas)} días disponibles (del 1 al {len(fechas_unicas)})."
+                ),
+                "data": []
+            }
+        
+    if tipo is not None:
+            tipos = list(set(evento["tipo"] for evento in programa_completo))
+            tipo_encontrado = find_in_array(tipo,tipos)
+            if tipo_encontrado is not None:
+                filtros["tipos"] = tipo_encontrado
+
+    if filtros:
+        programa_completo = filtros_lista(programa_completo, filtros)
+    #print(programa_completo)
+    return programa_completo
