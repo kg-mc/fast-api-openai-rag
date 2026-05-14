@@ -20,7 +20,7 @@ class Persona(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     nombres = Column(Text)
     rol = Column(Text)
-    cargo = Column(Text)
+    cargo = Column(Text, nullable=True)
     info = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     

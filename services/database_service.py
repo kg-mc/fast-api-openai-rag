@@ -19,7 +19,7 @@ async def update_personas():
         personas_global = [
             PersonaSchema(
                 id=p.id,
-                nombre_completo=p.nombres.lower()
+                nombre_completo=(p.nombres or "").lower()
             )
             for p in personas
         ]
