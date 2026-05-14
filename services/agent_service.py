@@ -107,7 +107,20 @@ def eje_tematico() -> str:
     """Usa esta herramienta para obtener el eje temático del CADER XXIV."""
     return "El eje temático del CADER XXIV es 'Transformación Digital y Gobernanza Registral: Innovación y fortalecimiento de la confianza ciudadana'."
 
-@tool("saludo"  , description="Usa esta herramienta para saludar al usuario y presentarte en caso te diga Hola.")
+@tool("saludo"  , description="""
+    DEBES usar esta herramienta cuando el usuario:
+    - salude;
+    - inicie conversación;
+    - diga hola;
+    - diga buenos días;
+    - diga buenas tardes;
+    - diga buenas noches;
+    - diga hey;
+    - diga hi.
+
+    Esta herramienta se usa exclusivamente para responder saludos y presentaciones iniciales.
+    """
+)
 def saludo() -> str:
     """Usa esta herramienta para saludar al usuario y presentarte en caso te diga Hola. o salude"""
     return "¡Hola! Mi nombre es CaderBot  y estoy a tu disposición para cualquier información relacionada con el CADER XXIV. ¿En qué puedo ayudarte hoy?"

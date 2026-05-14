@@ -19,7 +19,7 @@ TOOLS = [
     retrieve_persona_from_context,
     get_contenido_ponencia_ponente
 ]
-openai_llm = ChatOpenAI(model=LLM_MODEL_NAME_OPENAI, temperature=0, max_completion_tokens=500).bind_tools(TOOLS, tool_choice="auto")
+openai_llm = ChatOpenAI(model=LLM_MODEL_NAME_OPENAI, temperature=0.2, max_completion_tokens=500).bind_tools(TOOLS, tool_choice="auto")
 
 def get_message(response):
         messages = response["messages"]
