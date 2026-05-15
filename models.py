@@ -50,7 +50,7 @@ class ConferenciaChunk(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     conferencia_id = Column(BigInteger, ForeignKey("public.conferencias.id", ondelete="CASCADE"))
     contenido = Column(Text)
-    chunk_index = Column(BigInteger)
+    chunk_index = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     orden = Column(SmallInteger, nullable=True) 
     

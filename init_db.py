@@ -1,6 +1,6 @@
 import asyncio
 from database import Base, engine
-from models import User, Ponencia, PonenciaChunk
+from models import User, Persona, Conferencia, ConferenciaChunk, Programa
 
 async def init_models():
     async with engine.begin() as conn:
