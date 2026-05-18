@@ -69,5 +69,6 @@ class Programa(Base):
     tipo = Column(Text, nullable=False)
     titulo = Column(Text, nullable=False)
     participante = Column(Text, nullable=True)
-    descripcion = Column(Text, nullable = False)
+    cargo_participante = Column(Text, nullable=True)
+    rol_participante = Column(Text,nullable=True)
 
