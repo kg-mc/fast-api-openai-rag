@@ -27,6 +27,7 @@ class Persona(Base):
     conferencias = relationship("Conferencia", back_populates="persona")
 
 
+
 class Conferencia(Base):
     __tablename__ = "conferencias"
     __table_args__ = {"schema": "public"}
@@ -72,3 +73,32 @@ class Programa(Base):
     cargo_participante = Column(Text, nullable=True)
     rol_participante = Column(Text,nullable=True)
 
+class Actividad(Base):
+    __tablename__ = "actividades"
+    __table_args__ = {"schema": "public"}
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    persona_id = Column(BigInteger, ForeignKey("public.personas.id"))
+    titulo = Column(Text, nullable=True)
+    resumen = Column(Text, nullable=True)
+    tipo_actividad = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    persona = relationship("Persona", back_populates="actividades")
+    chunks = relationship(
+        "ActividadChunk",
+        back_populates="actividad",
+        cascade="all, delete"
+    )
+class ActividadChunk(Base):
+    __tablename__ = "actividad_chunks"
+    __table_args__ = {"schema": "public"}
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    actividad_id = Column(BigInteger, ForeignKey("public.actividades.id", ondelete="CASCADE"))
+    contenido = Column(Text)
+    chunk_index = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    orden = Column(SmallInteger, nullable=True) 
+    
+    actividad = relationship("Actividad", back_populates="chunks")
