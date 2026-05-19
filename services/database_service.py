@@ -116,7 +116,8 @@ def get_programa_sync():
                 "tipo": evento.tipo,
                 "titulo": evento.titulo,
                 "participante": evento.participante,
-                "descripcion": evento.descripcion
+                "cargo_participante": evento.cargo_participante,
+                "rol_participante": evento.rol_participante
             }
             for evento in eventos
         ]
