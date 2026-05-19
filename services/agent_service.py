@@ -4,7 +4,7 @@ from schemas.persona_schema import PersonaCompletaSchema
 from services.embedding_service import embed_query
 from services.embedding_service import search_in_pinecone as search
 from typing import List
-from services.database_service import find_personas, get_chunks_by_conferencia_id_sync, get_info_completa_persona_by_id_sync, get_conferencias_by_persona_id_sync, get_programa_sync, find_in_array, filtros_lista
+from services.database_service import find_personas, get_chunks_by_conferencia_id_sync, get_info_completa_persona_by_id_sync, get_conferencias_by_persona_id_sync, get_programa_sync, find_in_array, filtros_lista, get_actividad_by_persona_id_sync, get_chunks_by_actividad_id_sync
 
 
 @tool(
@@ -382,3 +382,133 @@ def get_programa(
         programa_completo = filtros_lista(programa_completo, filtros)
     #print(programa_completo)
     return programa_completo
+
+
+@tool(
+    "get_contenido_actividad_participante",
+    description="""
+Usa esta herramienta cuando el usuario pregunte
+sobre lo que dijo, explicó o presentó una persona en su actividad.
+
+Ideal para:
+- transcripciones
+- contenido hablado
+- explicaciones de una conferencia, ponenncia, etc.
+- resúmenes de exposiciones
+- información semántica relacionada al expositor
+Eejemplo de pregunta del usuario:
+¿Qué dijo el Dr. Juan Pérez en su conferencia sobre diseño urbano?
+de que hablo el Ing Lujan?
+dame un resumen de lo que hablo la Dra. Martinez
+Recibe el ID de la persona y retorna contenido relacionado a sus actividades.
+"""
+)
+def get_contenido_actividad_participante(persona_id: int) -> dict:
+
+    actividades = get_actividad_by_persona_id_sync(persona_id=persona_id)
+    all_chunks_actividad = []
+    for actividad in actividades:
+
+        chunks = get_chunks_by_actividad_id_sync(conferencia_id=actividad.id)
+        all_chunks_actividad.append({
+            "titulo_conferencia": actividad.titulo,
+            "chunks": chunks
+        })
+    return all_chunks_actividad
+
+@tool(
+    "retrieve_context_by_titulo_actividad",
+    description="""
+Usa esta herramienta para obtener el contenido relacionado a una actividad, a partir del título de la actividad. Esta herramienta es ideal para obtener información semántica relacionada a una actividad específica
+Ejemplo de pregunta del usuario:
+¿De qué habló la conferencia titulada "Innovación en el diseño urbano"?
+¿Qué dijo sobre el aborto el Dr. Julian? (En este caso tiene que utilizar otras herramientas (get_contenido_actividad_participante) para obtener titulo de la actividad y luego usar este para obtener el contenido relacionado a la actividad o extraer la informacion relevante)
+"""
+)
+def retrieve_context_by_titulo_actividad(titulo: str, query: str) -> str:
+    query_vector = embed_query(f"{titulo}. {query}")
+    results = search(query_vector=query_vector, top_k=10) or []
+    results = sorted(results, key=lambda x: x["score"], reverse=True)
+    filtered = []
+    titulo_lower = titulo.lower()
+    for r in results:
+        if r["score"] <= 0.2:
+            continue
+        payload = r.get("payload", {})
+        titulos_payload = [
+            v.lower()
+            for k, v in payload.items()
+            if k.endswith("_titulo")
+        ]
+        if any(titulo_lower in t for t in titulos_payload):
+            filtered.append(r)
+    textos = []
+    for point in filtered:
+        payload = point.get("payload", {})
+        text = payload.get("text") or payload.get("content")
+        if text:
+            textos.append(text)
+    return "\n".join(textos)
+
+
+@tool(
+    "retrieve_persona_from_context",
+    description="""
+Usa esta herramienta cuando el usuario pregunte
+quién habló sobre un tema específico.
+
+Realiza una búsqueda semántica y devuelve
+la información del conferencista relacionado
+con el contenido encontrado.
+
+Ejemplos:
+- ¿Quién habló sobre urbanismo sostenible?
+- ¿Qué conferencista mencionó problemas emocionales?
+- ¿Quién explicó temas de ciberseguridad?
+"""
+)
+def retrieve_persona_from_context(
+    user_query: str
+) -> dict:
+
+    query_vector = embed_query(user_query)
+
+    results = search(
+        query_vector=query_vector,
+        top_k=5
+    ) or []
+
+    results = sorted(
+        results,
+        key=lambda x: x["score"],
+        reverse=True
+    )
+
+    filtered = [
+        r for r in results
+        if r["score"] > 0.2
+    ]
+
+    if not filtered:
+        return {
+            "found": False,
+            "message": "No se encontró una persona relacionada."
+        }
+
+    best = filtered[0]
+    payload = best.get("payload", {})
+    tipo = payload.get("tipo_actividad")
+
+    resultado = {
+        "found": True,
+        "participante_name": payload.get("participante_name"),
+        "contenido_relacionado": (
+            payload.get("content")
+            or payload.get("text")
+        )
+    }
+
+    if tipo:
+        resultado[f"{tipo}_titulo"] = payload.get(f"{tipo}_titulo")
+
+    return resultado

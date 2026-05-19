@@ -3,7 +3,7 @@ from database import AsyncSessionLocal, SessionLocal
 from schemas.persona_schema import PersonaCompletaSchema, PersonaSchema
 from sqlalchemy import text
 from sqlalchemy import select
-from models import Persona, Conferencia, ConferenciaChunk, Programa
+from models import Persona, Conferencia, ConferenciaChunk, Programa, Actividad, ActividadChunk
 
 personas_global: list[PersonaSchema] = []
 nombres_global: list[str] = []
@@ -152,3 +152,43 @@ def filtros_lista(array, filtros):
         ]
 
     return resultado
+
+
+async def update_tipos_actividad():
+    print("actualizando tipos de actividades desde la bd...")
+    global tipos_actividad_global
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Actividad)
+        )
+        actividades = result.scalars().all()
+        tipos_actividad_global = [
+            tp.tipo_actividad for tp in actividades
+        ]
+
+def get_actividad_by_persona_id_sync(persona_id: int):
+    with SessionLocal() as session:
+        actividades = (
+            session.query(Actividad)
+            .filter(Actividad.persona_id == persona_id)
+            .all()
+        )
+        return actividades
+    
+def get_chunks_by_actividad_id_sync(actividad_id: int):
+    with SessionLocal() as session:
+        chunks = (
+            session.query(ActividadChunk)
+            .filter(ActividadChunk.actividad_id == actividad_id)
+            .order_by(ActividadChunk.orden.asc())
+            .all()
+        )
+        return [
+            {
+                "orden": chunk.orden,
+                "contenido": chunk.contenido,
+                
+            }
+            for chunk in chunks
+        ]
+    
