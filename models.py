@@ -24,8 +24,8 @@ class Persona(Base):
     info = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    conferencias = relationship("Conferencia", back_populates="persona")
-
+    #conferencias = relationship("Conferencia", back_populates="persona")
+    actividades = relationship("Actividad", back_populates="persona")
 
 
 class Conferencia(Base):

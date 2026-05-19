@@ -19,7 +19,7 @@ TOOLS = [
     retrieve_persona_from_context,
     #get_contenido_conferencia_conferencista,
     retrieve_context_by_titulo_actividad,
-    get_contenido_actividad_participante
+    get_contenido_actividad_participante,
     get_programa
 ]
 openai_llm = ChatOpenAI(model=LLM_MODEL_NAME_OPENAI, temperature=0.2, max_completion_tokens=500).bind_tools(TOOLS, tool_choice="auto")
