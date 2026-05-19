@@ -3,7 +3,7 @@ from database import AsyncSessionLocal, SessionLocal
 from schemas.persona_schema import PersonaCompletaSchema, PersonaSchema
 from sqlalchemy import text
 from sqlalchemy import select
-from models import Persona, Conferencia, ConferenciaChunk, Programa, Actividad, ActividadChunk
+from models import Persona, Programa, Actividad, ActividadChunk
 
 personas_global: list[PersonaSchema] = []
 nombres_global: list[str] = []
@@ -66,7 +66,7 @@ def get_info_completa_persona_by_id_sync(persona_id: int) -> PersonaCompletaSche
             cargo=persona.cargo
         )
 
-def get_conferencias_by_persona_id_sync(persona_id: int):
+""" def get_conferencias_by_persona_id_sync(persona_id: int):
     with SessionLocal() as session:
         conferencias = (
             session.query(Conferencia)
@@ -92,7 +92,7 @@ def get_chunks_by_conferencia_id_sync(conferencia_id: int):
             for chunk in chunks
         ]
 
-
+ """
 def get_programa_sync():
 
     with SessionLocal() as session:
