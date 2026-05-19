@@ -28,7 +28,7 @@ class Persona(Base):
     actividades = relationship("Actividad", back_populates="persona")
 
 
-class Conferencia(Base):
+""" class Conferencia(Base):
     __tablename__ = "conferencias"
     __table_args__ = {"schema": "public"}
 
@@ -56,7 +56,7 @@ class ConferenciaChunk(Base):
     orden = Column(SmallInteger, nullable=True) 
     
     conferencia = relationship("Conferencia", back_populates="chunks")
-
+ """
 class Programa(Base):
 
     __tablename__ = "programa"
