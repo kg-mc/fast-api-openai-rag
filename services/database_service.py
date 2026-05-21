@@ -61,7 +61,7 @@ def get_info_completa_persona_by_id_sync(persona_id: int) -> PersonaCompletaSche
 
         return PersonaCompletaSchema(
             nombres_completo=persona.nombres,
-            rol_en_evento=persona.rol,
+            #rol_en_evento=persona.rol if persona.rol else None,
             info=persona.info,
             cargo=persona.cargo
         )

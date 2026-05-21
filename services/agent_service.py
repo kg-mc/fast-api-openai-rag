@@ -101,8 +101,8 @@ def buscar_persona(nombres: str):
 
 @tool("info_completa_persona", description="""
 Usa esta herramienta para obtener la información completa de una persona a partir de su ID.
-El parámetro de entrada es el ID de la persona, que se obtiene a través de la herramienta buscar_persona. Esta herramienta devuelve toda la información disponible de la persona, incluyendo su nombre completo, rol, información adicional y las conferencias asociadas a esa persona.
-Recuerda que el rol de la persona puede ser conferencista, asistente, organizador, etc. La información adicional puede incluir detalles relevantes sobre la persona que puedan ser útiles para responder a las consultas del usuario.
+El parámetro de entrada es el ID de la persona, que se obtiene a través de la herramienta buscar_persona. Esta herramienta devuelve toda la información disponible de la persona, incluyendo su nombre completo,  información adicional.
+La información adicional puede incluir detalles relevantes sobre la persona que puedan ser útiles para responder a las consultas del usuario.
 Ejemplo de uso:
 Usuario: ¿Quién es el Dr. Juan Pérez?
 Bot: El Dr. Juan Pérez es un reconocido arquitecto especializado en diseño urbano, con más de 20 años de experiencia en el campo. Ha participado en numerosos proyectos de gran escala y ha sido conferencista en varios eventos internacionales."""
