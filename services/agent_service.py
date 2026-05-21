@@ -258,9 +258,9 @@ def get_contenido_actividad_participante(persona_id: int) -> dict:
     all_chunks_actividad = []
     for actividad in actividades:
 
-        chunks = get_chunks_by_actividad_id_sync(conferencia_id=actividad.id)
+        chunks = get_chunks_by_actividad_id_sync(actividad_id=actividad.id)
         all_chunks_actividad.append({
-            "titulo_conferencia": actividad.titulo,
+            "titulo": actividad.titulo,
             "chunks": chunks
         })
     return all_chunks_actividad
