@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, Text, Numeric, DateTime, func, ForeignKey, SmallInteger, Date, Time
+from sqlalchemy import Column,UniqueConstraint, BigInteger, Text, Numeric, DateTime, func, ForeignKey, SmallInteger, Date, Time
 from database import Base
 from sqlalchemy.orm import relationship
 
@@ -15,11 +15,19 @@ class User(Base):
     
 class Persona(Base):
     __tablename__ = "personas"
-    __table_args__ = {"schema": "public"}
+    __table_args__ = (
+        UniqueConstraint(
+            "nombres",
+            name="uq_personas_nombres"
+        ),
+        {
+            "schema": "public"
+        }
+    )
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    nombres = Column(Text)
-    rol = Column(Text)
+    nombres = Column(Text, nullable=False)
+    #rol = Column(Text)
     cargo = Column(Text, nullable=True)
     info = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
